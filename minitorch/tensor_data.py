@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from calendar import c
+# from calendar import c
 import random
 from typing import Iterable, Optional, Sequence, Tuple, Union
 
@@ -73,7 +73,6 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         cur_ord = cur_ord // sh
 
 
-
 def broadcast_index(
     big_index: Index, big_shape: Shape, shape: Shape, out_index: OutIndex
 ) -> None:
@@ -102,6 +101,7 @@ def broadcast_index(
             out_index[i] = 0
     return None
 
+
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     """Broadcast two shapes to create a new union shape.
 
@@ -119,18 +119,25 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
         IndexingError : if cannot broadcast
 
     """
-    if len(shape1) > len(shape2):
-        shape1, shape2 = shape2, shape1
-    new_shape = []
-    for s2 in reversed(shape2):
-        s1 = shape1[-len(new_shape) - 1] if len(new_shape) < len(shape1) else 1
-        if s1 != s2 and s1 != 1 and s2 != 1:
-            raise IndexingError("Cannot broadcast")
-        if s1 == 1:
-            new_shape.append(s2)
+    a, b = shape1, shape2
+    m = max(len(a), len(b))
+    c_rev = [0] * m
+    a_rev = list(reversed(a))
+    b_rev = list(reversed(b))
+
+    for i in range(m):
+        if i >= len(a):
+            c_rev[i] = b_rev[i]
+        elif i >= len(b):
+            c_rev[i] = a_rev[i]
         else:
-            new_shape.append(s1)
-    return tuple(reversed(new_shape))
+            c_rev[i] = max(a_rev[i], b_rev[i])
+            if a_rev[i] != c_rev[i] and a_rev[i] != 1:
+                raise IndexingError(f"Broadcast failure {a} {b}")
+            if b_rev[i] != c_rev[i] and b_rev[i] != 1:
+                raise IndexingError(f"Broadcast failure {a} {b}")
+
+    return tuple(reversed(c_rev))
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:

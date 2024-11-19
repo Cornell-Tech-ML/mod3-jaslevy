@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar, Any, Tuple
+from typing import TYPE_CHECKING, TypeVar, Any
 
 import numpy as np
-# added
-import numba
 
 from numba import prange
 from numba import njit as _njit
 
 from .tensor_data import (
-    MAX_DIMS,
     broadcast_index,
     index_to_position,
     shape_broadcast,
@@ -22,7 +19,7 @@ if TYPE_CHECKING:
     from typing import Callable, Optional
 
     from .tensor import Tensor
-    from .tensor_data import Index, Shape, Storage, Strides
+    from .tensor_data import Shape, Storage, Strides
 
 # TIP: Use `NUMBA_DISABLE_JIT=1 pytest tests/ -m task3_1` to run these tests without JIT.
 
@@ -173,19 +170,21 @@ def tensor_map(
     ) -> None:
         size = np.prod(out_shape)
 
-        if out_strides == in_strides: 
-            for i in prange(size):  
+        if out_strides == in_strides:
+            for i in prange(size):
                 out[i] = fn(in_storage[i])
         else:
             out_shape_array = np.asarray(out_shape, dtype=np.int32)
             in_shape_array = np.asarray(in_shape, dtype=np.int32)
 
-            for i in prange(size): 
+            for i in prange(size):
                 local_out_index = np.empty_like(out_shape_array)
                 to_index(i, out_shape_array, local_out_index)
 
                 local_in_index = np.empty_like(in_shape_array)
-                broadcast_index(local_out_index, out_shape_array, in_shape_array, local_in_index)
+                broadcast_index(
+                    local_out_index, out_shape_array, in_shape_array, local_in_index
+                )
 
                 out_pos = index_to_position(local_out_index, out_strides)
                 in_pos = index_to_position(local_in_index, in_strides)
@@ -193,7 +192,6 @@ def tensor_map(
                 out[out_pos] = fn(in_storage[in_pos])
 
     return njit(_map, parallel=True)  # type: ignore
-
 
 
 def tensor_zip(
@@ -233,8 +231,7 @@ def tensor_zip(
         size = np.prod(out_shape)
 
         stride_aligned = (
-            out_strides == a_strides == b_strides
-            and out_shape == a_shape == b_shape
+            out_strides == a_strides == b_strides and out_shape == a_shape == b_shape
         )
 
         if stride_aligned:
@@ -260,6 +257,7 @@ def tensor_zip(
                 b_pos = index_to_position(b_index, b_strides)
 
                 out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
+
     return njit(_zip, parallel=True)  # type: ignore
 
 
@@ -298,12 +296,12 @@ def tensor_reduce(
         a_shape_np = np.asarray(a_shape, dtype=np.int32)
         reduce_size = a_shape[reduce_dim]
 
-        for i in prange(size): 
+        for i in prange(size):
             out_index = np.empty_like(out_shape_np)
             a_index = np.empty_like(a_shape_np)
             to_index(i, out_shape_np, out_index)
             a_index[:] = out_index
-            a_index[reduce_dim] = 0 
+            a_index[reduce_dim] = 0
 
             out_pos = index_to_position(out_index, out_strides)
             a_pos = index_to_position(a_index, a_strides)
@@ -311,13 +309,12 @@ def tensor_reduce(
             accumulator = a_storage[a_pos]
 
             for j in range(1, reduce_size):
-                a_index[reduce_dim] = j  
+                a_index[reduce_dim] = j
                 a_pos = index_to_position(a_index, a_strides)
                 accumulator = fn(accumulator, a_storage[a_pos])
 
             out[out_pos] = accumulator
 
-        
     return njit(_reduce, parallel=True)  # type: ignore
 
 
@@ -370,28 +367,22 @@ def _tensor_matrix_multiply(
     out_batch_stride = out_strides[0] if len(out_shape) == 3 else 0
     batch_size = out_shape[0] if len(out_shape) == 3 else 1
     out_rows, out_cols = out_shape[-2], out_shape[-1]
-    inner_dim = a_shape[-1] 
+    inner_dim = a_shape[-1]
 
-    for batch in prange(batch_size): 
+    for batch in prange(batch_size):
         for i in range(out_rows):
-            for j in range(out_cols):  
+            for j in range(out_cols):
                 sum_value = 0.0
                 for k in range(inner_dim):
                     a_pos = (
-                        batch * a_batch_stride
-                        + i * a_strides[-2]
-                        + k * a_strides[-1]
+                        batch * a_batch_stride + i * a_strides[-2] + k * a_strides[-1]
                     )
                     b_pos = (
-                        batch * b_batch_stride
-                        + k * b_strides[-2]
-                        + j * b_strides[-1]
+                        batch * b_batch_stride + k * b_strides[-2] + j * b_strides[-1]
                     )
                     sum_value += a_storage[a_pos] * b_storage[b_pos]
                 out_pos = (
-                    batch * out_batch_stride
-                    + i * out_strides[-2]
-                    + j * out_strides[-1]
+                    batch * out_batch_stride + i * out_strides[-2] + j * out_strides[-1]
                 )
                 out[out_pos] = sum_value
 

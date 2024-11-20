@@ -278,27 +278,26 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
     pos = cuda.threadIdx.x
 
     # Implement for Task 3.3.
+    cache[pos] = 0.0
+
+    # Load elements into shared memory
     if i < size:
         cache[pos] = a[i]
-    else:
-        cache[pos] = 0.0  # Handle out-of-bounds threads
 
-    # Synchronize threads in the block
+    # Synchronize threads before reduction
     cuda.syncthreads()
 
     # Perform reduction in shared memory
-    step = 1
-    while step < cuda.blockDim.x:
-        if pos % (2 * step) == 0 and (pos + step) < cuda.blockDim.x:
-            cache[pos] += cache[pos + step]
-        step *= 2
+    stride = 1
+    while stride < BLOCK_DIM:
+        if pos % (2 * stride) == 0 and pos + stride < BLOCK_DIM:
+            cache[pos] += cache[pos + stride]
+        stride *= 2
         cuda.syncthreads()
 
-    # Write the result of this block's sum to the global memory
-    if pos == 0:  # Only thread 0 writes to global memory
+    # Write the result of the block to the output
+    if pos == 0:
         out[cuda.blockIdx.x] = cache[0]
-
-
 
 jit_sum_practice = cuda.jit()(_sum_practice)
 

@@ -8,6 +8,7 @@
 
 
 ## 3.1 and 3.2 Diagnostics Output:
+<pre>
 MAP
 
 ================================================================================
@@ -304,6 +305,12 @@ Parallel structure is already optimal.
 Allocation hoisting:
 No allocation hoisting found
 None
+</pre>
+
+## 3.4 fast_ops vs cuda_ops Runtime Analysis
+![image](https://github.com/user-attachments/assets/cbde856f-4a18-45b5-91f4-3b87f265b2d4)
+
+The results show that the cuda_ops matmul implementation provides faster runtimes for larger matrices than the fast_ops matmul implementation
 
 
 

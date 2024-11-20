@@ -347,32 +347,31 @@ def tensor_reduce(
         pos = cuda.threadIdx.x
 
         # Implement for Task 3.3.
-        global_id = cuda.blockIdx.x * cuda.blockDim.x + pos
-
+        if out_pos >= out_size:
+            return
+        to_index(out_pos, out_shape, out_index)
         cache[pos] = reduce_value
-
-        if global_id < out_size:
-            to_index(out_pos, out_shape, out_index)
-
+        accumulator = reduce_value
+        for i in range(pos, a_shape[reduce_dim], BLOCK_DIM):
             a_index = cuda.local.array(MAX_DIMS, numba.int32)
-            a_index[:] = out_index
+            for j in range(len(out_index)):
+                a_index[j] = out_index[j]
 
-            accumulator = reduce_value
-            for i in range(a_shape[reduce_dim]):
-                a_index[reduce_dim] = i
-                a_pos = index_to_position(a_index, a_strides)
-                accumulator = fn(accumulator, a_storage[a_pos])
-            cache[pos] = accumulator
+            a_index[reduce_dim] = i
+            a_pos = index_to_position(a_index, a_strides)
+            accumulator = fn(accumulator, a_storage[a_pos])
+
+        cache[pos] = accumulator
         cuda.syncthreads()
+
         stride = 1
         while stride < BLOCK_DIM:
-            index = pos + stride
-            if pos % (2 * stride) == 0 and index < BLOCK_DIM:
-                cache[pos] = fn(cache[pos], cache[index])
-            stride *= 2
+            if pos % (2 * stride) == 0 and pos + stride < BLOCK_DIM:
+                cache[pos] = fn(cache[pos], cache[pos + stride])
             cuda.syncthreads()
+            stride *= 2
+
         if pos == 0:
-            out_pos = index_to_position(out_index, out_strides)
             out[out_pos] = cache[0]
 
 

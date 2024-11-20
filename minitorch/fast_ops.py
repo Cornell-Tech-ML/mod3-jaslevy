@@ -12,6 +12,7 @@ from .tensor_data import (
     index_to_position,
     shape_broadcast,
     to_index,
+    MAX_DIMS,
 )
 from .tensor_ops import MapProto, TensorOps
 
@@ -170,20 +171,18 @@ def tensor_map(
     ) -> None:
         size = np.prod(out_shape)
 
-        if out_strides == in_strides:
+        stride_aligned = np.array_equal(out_strides, in_strides) and np.array_equal(out_shape, in_shape)
+        if stride_aligned:
             for i in prange(size):
                 out[i] = fn(in_storage[i])
         else:
-            out_shape_array = np.asarray(out_shape, dtype=np.int32)
-            in_shape_array = np.asarray(in_shape, dtype=np.int32)
-
             for i in prange(size):
-                local_out_index = np.empty_like(out_shape_array)
-                to_index(i, out_shape_array, local_out_index)
+                local_out_index = np.zeros(MAX_DIMS, dtype=np.int32)
+                to_index(i, out_shape, local_out_index)
 
-                local_in_index = np.empty_like(in_shape_array)
+                local_in_index = np.zeros(MAX_DIMS, dtype=np.int32)
                 broadcast_index(
-                    local_out_index, out_shape_array, in_shape_array, local_in_index
+                    local_out_index, out_shape, in_shape, local_in_index
                 )
 
                 out_pos = index_to_position(local_out_index, out_strides)
@@ -228,33 +227,29 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
+        
         size = np.prod(out_shape)
-
         stride_aligned = (
-            out_strides == a_strides == b_strides and out_shape == a_shape == b_shape
+            np.array_equal(out_strides, a_strides) and np.array_equal(out_strides, b_strides) and np.array_equal(out_shape, a_shape) and np.array_equal(out_shape, b_shape)
         )
 
         if stride_aligned:
             for i in prange(size):
                 out[i] = fn(a_storage[i], b_storage[i])
         else:
-            out_shape_array = np.asarray(out_shape, dtype=np.int32)
-            a_shape_array = np.asarray(a_shape, dtype=np.int32)
-            b_shape_array = np.asarray(b_shape, dtype=np.int32)
-
             for i in prange(size):
-                out_index = np.empty_like(out_shape_array)
-                a_index = np.empty_like(a_shape_array)
-                b_index = np.empty_like(b_shape_array)
+                out_index = np.zeros(MAX_DIMS, dtype=np.int32)
+                a_i= np.zeros(MAX_DIMS, dtype=np.int32)
+                b_i= np.zeros(MAX_DIMS, dtype=np.int32)
 
-                to_index(i, out_shape_array, out_index)
+                to_index(i, out_shape, out_index)
 
-                broadcast_index(out_index, out_shape_array, a_shape_array, a_index)
-                broadcast_index(out_index, out_shape_array, b_shape_array, b_index)
+                broadcast_index(out_index, out_shape, a_shape, a_i)
+                broadcast_index(out_index, out_shape, b_shape, b_i)
 
                 out_pos = index_to_position(out_index, out_strides)
-                a_pos = index_to_position(a_index, a_strides)
-                b_pos = index_to_position(b_index, b_strides)
+                a_pos = index_to_position(a_i, a_strides)
+                b_pos = index_to_position(b_i, b_strides)
 
                 out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
@@ -297,20 +292,20 @@ def tensor_reduce(
         reduce_size = a_shape[reduce_dim]
 
         for i in prange(size):
-            out_index = np.empty_like(out_shape_np)
-            a_index = np.empty_like(a_shape_np)
+            out_index = np.zeros_like(out_shape_np)
+            a_i = np.zeros_like(a_shape_np)
             to_index(i, out_shape_np, out_index)
-            a_index[:] = out_index
-            a_index[reduce_dim] = 0
+            a_i[:] = out_index
+            a_i[reduce_dim] = 0
 
             out_pos = index_to_position(out_index, out_strides)
-            a_pos = index_to_position(a_index, a_strides)
+            a_pos = index_to_position(a_i, a_strides)
 
             accumulator = a_storage[a_pos]
 
             for j in range(1, reduce_size):
-                a_index[reduce_dim] = j
-                a_pos = index_to_position(a_index, a_strides)
+                a_i[reduce_dim] = j
+                a_pos = index_to_position(a_i, a_strides)
                 accumulator = fn(accumulator, a_storage[a_pos])
 
             out[out_pos] = accumulator

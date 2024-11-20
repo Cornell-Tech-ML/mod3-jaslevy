@@ -229,8 +229,23 @@ def tensor_zip(
         b_index = cuda.local.array(MAX_DIMS, numba.int32)
         i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
 
-        # TODO: Implement for Task 3.3.
-        raise NotImplementedError("Need to implement for Task 3.3")
+        # Implement for Task 3.3.
+        # Guard against threads that are out of bounds
+        if i < out_size:
+            # Calculate the output index
+            to_index(i, out_shape, out_index)
+
+            # Broadcast indices for a and b
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+
+            # Get storage positions
+            out_pos = index_to_position(out_index, out_strides)
+            a_pos = index_to_position(a_index, a_strides)
+            b_pos = index_to_position(b_index, b_strides)
+
+            # Apply the operation and write to output
+            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return cuda.jit()(_zip)  # type: ignore
 
@@ -262,8 +277,27 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
     i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
     pos = cuda.threadIdx.x
 
-    # TODO: Implement for Task 3.3.
-    raise NotImplementedError("Need to implement for Task 3.3")
+    # Implement for Task 3.3.
+    if i < size:
+        cache[pos] = a[i]
+    else:
+        cache[pos] = 0.0  # Handle out-of-bounds threads
+
+    # Synchronize threads in the block
+    cuda.syncthreads()
+
+    # Perform reduction in shared memory
+    step = 1
+    while step < cuda.blockDim.x:
+        if pos % (2 * step) == 0 and (pos + step) < cuda.blockDim.x:
+            cache[pos] += cache[pos + step]
+        step *= 2
+        cuda.syncthreads()
+
+    # Write the result of this block's sum to the global memory
+    if pos == 0:  # Only thread 0 writes to global memory
+        out[cuda.blockIdx.x] = cache[0]
+
 
 
 jit_sum_practice = cuda.jit()(_sum_practice)

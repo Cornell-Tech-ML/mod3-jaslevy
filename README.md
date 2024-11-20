@@ -8,6 +8,7 @@
 
 
 ## 3.1 and 3.2 Diagnostics Output:
+<details>
 <pre>
 MAP
 
@@ -306,6 +307,7 @@ Allocation hoisting:
 No allocation hoisting found
 None
 </pre>
+</details>
 
 ## 3.4 fast_ops vs cuda_ops Runtime Analysis
 ![image](https://github.com/user-attachments/assets/cbde856f-4a18-45b5-91f4-3b87f265b2d4)

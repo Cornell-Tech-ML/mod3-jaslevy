@@ -99,7 +99,7 @@ class FastTrain:
                 optim.step()
 
             losses.append(total_loss)
-            end_time = time.time() 
+            end_time = time.time()
             epoch_duration = end_time - start_time
             if epoch % 10 == 0 or epoch == max_epochs:
                 X = minitorch.tensor(data.X, backend=self.backend)

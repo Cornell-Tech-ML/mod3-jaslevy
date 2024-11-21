@@ -29,7 +29,7 @@ FakeCUDAKernel = Any
 Fn = TypeVar("Fn")
 
 
-def device_jit(fn: Fn, **kwargs) -> Fn: # noqa: ANN001, ANN003
+def device_jit(fn: Fn, **kwargs) -> Fn:  # noqa: ANN001, ANN003
     """JIT compile the given function for CUDA device execution.
 
     Args:
@@ -45,9 +45,8 @@ def device_jit(fn: Fn, **kwargs) -> Fn: # noqa: ANN001, ANN003
     return _jit(device=True, **kwargs)(fn)  # type: ignore
 
 
-def jit(fn, **kwargs) -> FakeCUDAKernel: # noqa: ANN001, ANN003
-    """ 
-    JIT compile the given function for CUDA execution.
+def jit(fn, **kwargs) -> FakeCUDAKernel:  # noqa: ANN001, ANN003
+    """JIT compile the given function for CUDA execution.
 
     Args:
     ----
@@ -131,8 +130,7 @@ class CudaOps(TensorOps):
     def reduce(
         fn: Callable[[float, float], float], start: float = 0.0
     ) -> Callable[[Tensor, int], Tensor]:
-        """ 
-        Perform reduction along a specified dimension of a tensor using GPU parallelization.
+        """Perform reduction along a specified dimension of a tensor using GPU parallelization.
 
         This function takes in a reduction function `fn` and applies it to the elements
         of the input tensor `a` along the specified dimension `dim`. The reduction is
@@ -176,10 +174,10 @@ class CudaOps(TensorOps):
     def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
         """Perform matrix multiplication between two tensors `a` and `b` using GPU parallelization.
 
-        This function ensures that both input tensors are treated as 3-dimensional tensors 
-        to support batch matrix multiplication. If either input is 2-dimensional, it is 
-        temporarily reshaped to a 3-dimensional tensor. The output tensor is computed by 
-        broadcasting the batch dimensions and then performing the matrix multiplication 
+        This function ensures that both input tensors are treated as 3-dimensional tensors
+        to support batch matrix multiplication. If either input is 2-dimensional, it is
+        temporarily reshaped to a 3-dimensional tensor. The output tensor is computed by
+        broadcasting the batch dimensions and then performing the matrix multiplication
         along the last two dimensions.
 
         Args:
@@ -189,8 +187,8 @@ class CudaOps(TensorOps):
 
         Returns:
         -------
-        Tensor: The resulting tensor after matrix multiplication. If both inputs are 
-                2-dimensional, the output will also be 2-dimensional; otherwise, it 
+        Tensor: The resulting tensor after matrix multiplication. If both inputs are
+                2-dimensional, the output will also be 2-dimensional; otherwise, it
                 will be 3-dimensional with shape `[batch_size, m, p]`.
 
         """
@@ -387,7 +385,9 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
     if pos == 0:
         out[cuda.blockIdx.x] = cache[0]
 
+
 jit_sum_practice = cuda.jit()(_sum_practice)
+
 
 def sum_practice(a: Tensor) -> TensorData:
     """A practice sum kernel to prepare for reduce."""
@@ -462,7 +462,6 @@ def tensor_reduce(
         if pos == 0:
             out[out_pos] = cache[0]
 
-
     return jit(_reduce)  # type: ignore
 
 
@@ -523,7 +522,6 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
         cuda.syncthreads()
     if row < size and col < size:
         out[row * size + col] = temp
-    
 
 
 jit_mm_practice = jit(_mm_practice)
@@ -632,11 +630,7 @@ def _tensor_matrix_multiply(
             temp += a_shared[pi, n] * b_shared[n, pj]
         cuda.syncthreads()
     if i < out_shape[-2] and j < out_shape[-1]:
-        out[
-            batch * out_strides[0]
-            + i * out_strides[-2]
-            + j * out_strides[-1]
-        ] = temp
+        out[batch * out_strides[0] + i * out_strides[-2] + j * out_strides[-1]] = temp
 
 
 tensor_matrix_multiply = jit(_tensor_matrix_multiply)

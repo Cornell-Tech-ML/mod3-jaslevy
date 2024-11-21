@@ -30,10 +30,10 @@ if TYPE_CHECKING:
 Fn = TypeVar("Fn")
 
 
-def njit(fn: Fn, **kwargs: Any) -> Fn: 
+def njit(fn: Fn, **kwargs: Any) -> Fn:
     """JIT compile a given function using Numba for optimized execution.
 
-    This function wraps the `numba.njit` decorator with default parameters to enable 
+    This function wraps the `numba.njit` decorator with default parameters to enable
     function inlining and apply any additional user-specified optimizations.
 
     Args:
@@ -43,9 +43,9 @@ def njit(fn: Fn, **kwargs: Any) -> Fn:
 
     Returns:
     -------
-        The JIT-compiled version of the input function, which can be executed with 
+        The JIT-compiled version of the input function, which can be executed with
         optimized performance.
-        
+
     """
     return _njit(inline="always", **kwargs)(fn)  # type: ignore
 
@@ -187,7 +187,9 @@ def tensor_map(
     ) -> None:
         size = np.prod(out_shape)
 
-        stride_aligned = np.array_equal(out_strides, in_strides) and np.array_equal(out_shape, in_shape)
+        stride_aligned = np.array_equal(out_strides, in_strides) and np.array_equal(
+            out_shape, in_shape
+        )
         if stride_aligned:
             for i in prange(size):
                 out[i] = fn(in_storage[i])
@@ -197,9 +199,7 @@ def tensor_map(
                 to_index(i, out_shape, local_out_index)
 
                 local_in_index = np.zeros(MAX_DIMS, dtype=np.int32)
-                broadcast_index(
-                    local_out_index, out_shape, in_shape, local_in_index
-                )
+                broadcast_index(local_out_index, out_shape, in_shape, local_in_index)
 
                 out_pos = index_to_position(local_out_index, out_strides)
                 in_pos = index_to_position(local_in_index, in_strides)
@@ -243,10 +243,12 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        
         size = np.prod(out_shape)
         stride_aligned = (
-            np.array_equal(out_strides, a_strides) and np.array_equal(out_strides, b_strides) and np.array_equal(out_shape, a_shape) and np.array_equal(out_shape, b_shape)
+            np.array_equal(out_strides, a_strides)
+            and np.array_equal(out_strides, b_strides)
+            and np.array_equal(out_shape, a_shape)
+            and np.array_equal(out_shape, b_shape)
         )
 
         if stride_aligned:
@@ -255,8 +257,8 @@ def tensor_zip(
         else:
             for i in prange(size):
                 out_index = np.zeros(MAX_DIMS, dtype=np.int32)
-                a_i= np.zeros(MAX_DIMS, dtype=np.int32)
-                b_i= np.zeros(MAX_DIMS, dtype=np.int32)
+                a_i = np.zeros(MAX_DIMS, dtype=np.int32)
+                b_i = np.zeros(MAX_DIMS, dtype=np.int32)
 
                 to_index(i, out_shape, out_index)
 

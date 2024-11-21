@@ -1,8 +1,8 @@
-import random # noqa: F401
-from collections import defaultdict # noqa: F401
+import random  # noqa: F401
+from collections import defaultdict  # noqa: F401
 import minitorch
 import time
-import sys # noqa: F401
+import sys  # noqa: F401
 import numpy as np
 
 FastTensorBackend = minitorch.TensorBackend(minitorch.FastOps)
@@ -12,14 +12,14 @@ GPUBackend = minitorch.TensorBackend(minitorch.CudaOps)
 def run_matmul(backend: minitorch.TensorBackend, size: int = 16) -> None:
     """Perform a matrix multiplication operation using the specified backend and matrix size.
 
-    This function creates two random square matrices of the specified size, 
-    performs matrix multiplication using the provided backend, and discards 
-    the result. It is useful for benchmarking or testing backend performance 
+    This function creates two random square matrices of the specified size,
+    performs matrix multiplication using the provided backend, and discards
+    the result. It is useful for benchmarking or testing backend performance
     for matrix operations.
 
     Args:
     ----
-        backend (minitorch.TensorBackend): The tensor backend to perform the 
+        backend (minitorch.TensorBackend): The tensor backend to perform the
             matrix multiplication (e.g., CPU, GPU, or custom backend).
         size (int): The size of the square matrices to multiply. Defaults to 16.
 

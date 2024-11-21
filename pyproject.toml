@@ -17,6 +17,7 @@ ignore = [
     "**/.*",
     "*chainrule.py*",
     "**/tests/test_tensor_general.py",
+    "**/tests/tensor_strategies.py",
 ]
 venvPath = "."
 venv = ".venv"

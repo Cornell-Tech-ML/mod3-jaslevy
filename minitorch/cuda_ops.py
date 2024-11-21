@@ -29,11 +29,36 @@ FakeCUDAKernel = Any
 Fn = TypeVar("Fn")
 
 
-def device_jit(fn: Fn, **kwargs) -> Fn:
+def device_jit(fn: Fn, **kwargs) -> Fn: # noqa: ANN001, ANN003
+    """JIT compile the given function for CUDA device execution.
+
+    Args:
+    ----
+    fn: The function to be JIT compiled.
+    kwargs: Additional keyword arguments for the JIT compilation.
+
+    Returns:
+    -------
+    A CUDA kernel compiled from the given function.
+
+    """
     return _jit(device=True, **kwargs)(fn)  # type: ignore
 
 
-def jit(fn, **kwargs) -> FakeCUDAKernel:
+def jit(fn, **kwargs) -> FakeCUDAKernel: # noqa: ANN001, ANN003
+    """ 
+    JIT compile the given function for CUDA execution.
+
+    Args:
+    ----
+    fn: The function to be JIT compiled.
+    kwargs: Additional keyword arguments for the JIT compilation.
+
+    Returns:
+    -------
+    A CUDA kernel compiled from the given function.
+
+    """
     return _jit(**kwargs)(fn)  # type: ignore
 
 
@@ -67,6 +92,26 @@ class CudaOps(TensorOps):
 
     @staticmethod
     def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
+        """Creates a CUDA-accelerated element-wise zip function for tensors.
+
+        This method generates a CUDA kernel that performs an element-wise operation
+        on two tensors using the provided binary function `fn`. The function
+        supports broadcasting to handle tensors of different shapes.
+
+        Args:
+        ----
+        fn (Callable[[float, float], float]): A binary function that defines the
+            operation to perform on the elements of the two tensors (e.g., addition,
+            subtraction, etc.).
+
+        Returns:
+        -------
+        Callable[[Tensor, Tensor], Tensor]: A function that takes two tensors as
+            input, applies the `fn` operation to each pair of elements, and returns
+            a new tensor containing the results. This function utilizes CUDA for
+            efficient computation.
+
+        """
         cufn: Callable[[float, float], float] = device_jit(fn)
         f = tensor_zip(cufn)
 
@@ -86,6 +131,29 @@ class CudaOps(TensorOps):
     def reduce(
         fn: Callable[[float, float], float], start: float = 0.0
     ) -> Callable[[Tensor, int], Tensor]:
+        """ 
+        Perform reduction along a specified dimension of a tensor using GPU parallelization.
+
+        This function takes in a reduction function `fn` and applies it to the elements
+        of the input tensor `a` along the specified dimension `dim`. The reduction is
+        performed in parallel using CUDA kernels.
+
+        The output tensor has the same shape as the input tensor, but with the specified
+        dimension reduced to size 1.
+
+        Args:
+        ----
+        fn: A callable that takes two floats and returns a float. This function is used
+            to perform the reduction.
+        start: The starting value for the reduction.
+        a: The input tensor to reduce.
+        dim: The dimension to reduce.
+
+        Returns:
+        -------
+        A tensor with the same shape as `a`, but with the specified dimension reduced.
+
+        """
         cufn: Callable[[float, float], float] = device_jit(fn)
         f = tensor_reduce(cufn)
 
@@ -106,6 +174,26 @@ class CudaOps(TensorOps):
 
     @staticmethod
     def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
+        """Perform matrix multiplication between two tensors `a` and `b` using GPU parallelization.
+
+        This function ensures that both input tensors are treated as 3-dimensional tensors 
+        to support batch matrix multiplication. If either input is 2-dimensional, it is 
+        temporarily reshaped to a 3-dimensional tensor. The output tensor is computed by 
+        broadcasting the batch dimensions and then performing the matrix multiplication 
+        along the last two dimensions.
+
+        Args:
+        ----
+        a (Tensor): The first input tensor. Must have shape `[batch_size, m, n]` or `[m, n]`.
+        b (Tensor): The second input tensor. Must have shape `[batch_size, n, p]` or `[n, p]`.
+
+        Returns:
+        -------
+        Tensor: The resulting tensor after matrix multiplication. If both inputs are 
+                2-dimensional, the output will also be 2-dimensional; otherwise, it 
+                will be 3-dimensional with shape `[batch_size, m, p]`.
+
+        """
         # Make these always be a 3 dimensional multiply
         both_2d = 0
         if len(a.shape) == 2:
@@ -251,9 +339,9 @@ def tensor_zip(
 
 
 def _sum_practice(out: Storage, a: Storage, size: int) -> None:
-    """This is a practice sum kernel to prepare for reduce.
+    """A practice sum kernel to prepare for reduce.
 
-    Given an array of length $n$ and out of size $n // \text{blockDIM}$
+    Given an array of length $n$ and out of size $n // r'''\'''text{blockDIM}$
     it should sum up each blockDim values into an out cell.
 
     $[a_1, a_2, ..., a_{100}]$
@@ -301,8 +389,8 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
 
 jit_sum_practice = cuda.jit()(_sum_practice)
 
-
 def sum_practice(a: Tensor) -> TensorData:
+    """A practice sum kernel to prepare for reduce."""
     (size,) = a.shape
     threadsperblock = THREADS_PER_BLOCK
     blockspergrid = (size // THREADS_PER_BLOCK) + 1
@@ -379,7 +467,7 @@ def tensor_reduce(
 
 
 def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
-    """This is a practice square MM kernel to prepare for matmul.
+    """A practice square MM kernel to prepare for matmul.
 
     Given a storage `out` and two storage `a` and `b`. Where we know
     both are shape [size, size] with strides [size, 1].
@@ -442,6 +530,22 @@ jit_mm_practice = jit(_mm_practice)
 
 
 def mm_practice(a: Tensor, b: Tensor) -> TensorData:
+    """CUDA matrix multiply.
+
+    The following code will CUDA compile fast versions your tensor_data functions.
+    If you get an error, read the docs for NUMBA as to what is allowed
+    in these functions.
+
+    Args:
+    ----
+        a (Tensor): tensor to be multiplied
+        b (Tensor): tensor to be multiplied
+
+    Returns:
+    -------
+        TensorData: result of the matrix multiplication
+
+    """
     (size, _) = a.shape
     threadsperblock = (THREADS_PER_BLOCK, THREADS_PER_BLOCK)
     blockspergrid = 1

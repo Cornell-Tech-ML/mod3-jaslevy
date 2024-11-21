@@ -29,7 +29,7 @@ from .tensor_functions import (
     Sigmoid,
     Sum,
     View,
-    tensor,
+    tensor, # noqa: F401
 )
 
 if TYPE_CHECKING:

@@ -30,7 +30,23 @@ if TYPE_CHECKING:
 Fn = TypeVar("Fn")
 
 
-def njit(fn: Fn, **kwargs: Any) -> Fn:
+def njit(fn: Fn, **kwargs: Any) -> Fn: 
+    """JIT compile a given function using Numba for optimized execution.
+
+    This function wraps the `numba.njit` decorator with default parameters to enable 
+    function inlining and apply any additional user-specified optimizations.
+
+    Args:
+    ----
+        fn: The function to be JIT-compiled.
+        **kwargs: Additional keyword arguments for customization of the JIT compilation.
+
+    Returns:
+    -------
+        The JIT-compiled version of the input function, which can be executed with 
+        optimized performance.
+        
+    """
     return _njit(inline="always", **kwargs)(fn)  # type: ignore
 
 

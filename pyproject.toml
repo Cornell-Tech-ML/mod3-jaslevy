@@ -32,6 +32,8 @@ reportUnknownLambdaType = "none"
 reportIncompatibleMethodOverride = "none"
 reportPrivateUsage = "none"
 reportMissingParameterType = "error"
+reportMissingImports = "none"
+
 
 
 

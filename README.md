@@ -383,24 +383,28 @@ The results show that the cuda_ops matmul implementation provides faster runtime
 #### Simple
 ##### GPU
 <img width="388" alt="Simple_results_mod4_gpu_small" src="https://github.com/user-attachments/assets/57fbf375-ac07-4097-aed9-d17ab6ff534f">
+
 ##### CPU
 <img width="369" alt="Simple_results_mod4_cpu_small" src="https://github.com/user-attachments/assets/2ba08ef1-da4c-43bb-b3f8-fc34c3a85166">
 
 #### XOR
 ##### GPU
 <img width="366" alt="Xor_results_mod4_gpu_small" src="https://github.com/user-attachments/assets/c93cd10b-5f8e-4e4d-9ec1-441735fcbc91">
+
 ##### CPU
 <img width="371" alt="Xor_results_mod4_cpu_small" src="https://github.com/user-attachments/assets/4c58eac7-1ec6-4b36-bcde-a63ad9f23633">
 
 #### Split
 ##### GPU
 <img width="364" alt="Split_results_mod4_gpu_small" src="https://github.com/user-attachments/assets/9d8e2c77-b29b-42f2-b7f2-5c737f3fb347">
+
 ##### CPU
 <img width="378" alt="Split_results_mod4_cpu_small" src="https://github.com/user-attachments/assets/b16bce5b-f4df-4ba8-aadf-f08d9bae89b4">
 
 ### Large Model on Simple Dataset (hidden size 200, learning rate 0.05)
 ##### GPU
 <img width="388" alt="Large_simple_results_mod4_gpu" src="https://github.com/user-attachments/assets/866337a0-9608-45cc-91ce-8ef5dd132dd7">
+
 ##### CPU
 <img width="372" alt="Large_simple_results_mod4_cpu" src="https://github.com/user-attachments/assets/72f3c84c-8a9a-4ce0-838c-81a2e6a9bc41">
 

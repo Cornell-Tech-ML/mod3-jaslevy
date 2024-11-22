@@ -408,6 +408,11 @@ The results show that the cuda_ops matmul implementation provides faster runtime
 ##### CPU
 <img width="366" alt="CPU 500" src="https://github.com/user-attachments/assets/59e8b12e-f433-4db9-898b-d53511445043">
 
+## 3.3 and 3.4 tests on Colab
+
+<img width="716" alt="Screenshot 2024-11-21 at 10 16 18 PM" src="https://github.com/user-attachments/assets/7cef7569-d2d4-4c3c-8b65-e8d4d6b5dcda">
+
+<img width="711" alt="Screenshot 2024-11-21 at 10 17 06 PM" src="https://github.com/user-attachments/assets/faf52ac3-3e53-49e8-bfaf-f20810f6382b">
 
 
 You will need to modify `tensor_functions.py` slightly in this assignment.

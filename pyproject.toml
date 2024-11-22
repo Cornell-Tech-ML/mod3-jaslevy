@@ -16,9 +16,11 @@ ignore = [
     "**/mt_diagrams",
     "**/.*",
     "*chainrule.py*",
+    "**/tests/test_tensor_general.py",
+    "**/tests/tensor_strategies.py",
 ]
 venvPath = "."
-venv = ".venv"
+venv = ".venvm3"
 reportUnknownMemberType = "none"
 reportUnknownParameterType = "none"
 reportUnknownArgumentType = "none"
@@ -30,6 +32,9 @@ reportUnknownLambdaType = "none"
 reportIncompatibleMethodOverride = "none"
 reportPrivateUsage = "none"
 reportMissingParameterType = "error"
+reportMissingImports = "none"
+
+
 
 
 [tool.pytest.ini_options]
@@ -74,7 +79,7 @@ exclude = [
     "**/docs/**/*",
 ]
 
-ignore = [
+lint.ignore = [
     "ANN101",
     "ANN401",
     "N801",
@@ -91,6 +96,7 @@ ignore = [
     "D415",
     "D402",
     "D205",
+    "D203",
     "D100",
     "D101",
     "D107",
@@ -98,8 +104,8 @@ ignore = [
     "ANN204",
     "ANN102",
 ]
-select = ["D", "E", "F", "N", "ANN"]
-fixable = [
+lint.select = ["D", "E", "F", "N", "ANN"]
+lint.fixable = [
     "A",
     "B",
     "C",
@@ -145,7 +151,7 @@ fixable = [
     "UP",
     "YTT",
 ]
-unfixable = []
+lint.unfixable = []
 
-[tool.ruff.extend-per-file-ignores]
+[tool.ruff.lint.extend-per-file-ignores]
 "tests/**/*.py" = ["D"]

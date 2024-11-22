@@ -401,12 +401,13 @@ The results show that the cuda_ops matmul implementation provides faster runtime
 ##### CPU
 <img width="378" alt="Split_results_mod4_cpu_small" src="https://github.com/user-attachments/assets/b16bce5b-f4df-4ba8-aadf-f08d9bae89b4">
 
-### Large Model on Simple Dataset (hidden size 200, learning rate 0.05)
+### Large Model on Simple Dataset (hidden size 500, learning rate 0.05)
 ##### GPU
-<img width="388" alt="Large_simple_results_mod4_gpu" src="https://github.com/user-attachments/assets/866337a0-9608-45cc-91ce-8ef5dd132dd7">
+<img width="364" alt="GPU 500" src="https://github.com/user-attachments/assets/b7de4f8f-0945-4977-8bdb-c6777325cb3a">
 
 ##### CPU
-<img width="372" alt="Large_simple_results_mod4_cpu" src="https://github.com/user-attachments/assets/72f3c84c-8a9a-4ce0-838c-81a2e6a9bc41">
+<img width="366" alt="CPU 500" src="https://github.com/user-attachments/assets/59e8b12e-f433-4db9-898b-d53511445043">
+
 
 
 You will need to modify `tensor_functions.py` slightly in this assignment.

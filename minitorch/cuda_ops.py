@@ -513,12 +513,12 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
     # Accumulator
     temp = 0.0
 
-    # iterate over k sections of the matrix. 
+    # iterate over k sections of the matrix.
     #  The range calculates the number of sections needed to cover the whole matrix,
     #  where each section is BLOCK_DIM in size. If the matrix size is not evenly divisible
     # by BLOCK_DIM, the last section handles the remaining elements.
     for k in range((size + BLOCK_DIM - 1) // BLOCK_DIM):
-        # Copy data from global memory to shared memory (loading) if 
+        # Copy data from global memory to shared memory (loading) if
         # the thread's row and column indices are within the matrix bounds.
         # Tis is for the first matrix (a)
         if row < size and k * BLOCK_DIM + tx < size:
@@ -528,20 +528,20 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
         else:
             a_shared[ty, tx] = 0.0
 
-        # Copy data from global memory to shared memory (loading) if 
+        # Copy data from global memory to shared memory (loading) if
         # the thread's row and column indices are within the matrix bounds.
         # This is for the second matrix (b)
         if col < size and k * BLOCK_DIM + ty < size:
             b_shared[ty, tx] = b[(k * BLOCK_DIM + ty) * size + col]
-         # For out-of-bounds threads, set the shared memory value to 0
+        # For out-of-bounds threads, set the shared memory value to 0
         else:
             b_shared[ty, tx] = 0.0
         # Sync threads within the block to insure they have all loaded data
-        # to shared memory 
+        # to shared memory
         cuda.syncthreads()
 
         # Perform the dot product for the current section of matrices 'a' and 'b'.
-        # Each thread computes a partial sum for its assigned element in the output matrix. 
+        # Each thread computes a partial sum for its assigned element in the output matrix.
         for n in range(BLOCK_DIM):
             temp += a_shared[ty, n] * b_shared[n, tx]
 
@@ -642,7 +642,7 @@ def _tensor_matrix_multiply(
     # Accumulator
     temp = 0.0
 
-    # Iterate over section of the shared dimension of the input 
+    # Iterate over section of the shared dimension of the input
     # matrices. Each iteration processes a BLOCK_DIM x BLOCK_DIM section.
     for k in range((a_shape[-1] + BLOCK_DIM - 1) // BLOCK_DIM):
         # Checking if the current thread is within the bounds of a.
@@ -651,8 +651,8 @@ def _tensor_matrix_multiply(
             # Load into shared memory
             a_shared[pi, pj] = a_storage[
                 batch * a_batch_stride  # Batch
-                + i * a_strides[-2]     # Row
-                + (k * BLOCK_DIM + pj) * a_strides[-1] # curent section (col)
+                + i * a_strides[-2]  # Row
+                + (k * BLOCK_DIM + pj) * a_strides[-1]  # curent section (col)
             ]
         # For out-of-bounds threads, set the shared memory value to 0
         else:
@@ -663,20 +663,20 @@ def _tensor_matrix_multiply(
         if j < b_shape[-1] and k * BLOCK_DIM + pi < b_shape[-2]:
             # Load into shared memory with offsets for correct position
             b_shared[pi, pj] = b_storage[
-                batch * b_batch_stride # Batch 
-                + (k * BLOCK_DIM + pi) * b_strides[-2] # Row 
-                + j * b_strides[-1] # column
+                batch * b_batch_stride  # Batch
+                + (k * BLOCK_DIM + pi) * b_strides[-2]  # Row
+                + j * b_strides[-1]  # column
             ]
         # For out-of-bounds threads, set the shared memory value to 0
         else:
             b_shared[pi, pj] = 0.0
-        
+
         # Sync threads within the block to insure they have all loaded data
-        # to shared memory 
+        # to shared memory
         cuda.syncthreads()
 
         # Perform the dot product for the current section of matrices 'a' and 'b'.
-        # Each thread computes a partial sum for its assigned element in the output matrix. 
+        # Each thread computes a partial sum for its assigned element in the output matrix.
         for n in range(BLOCK_DIM):
             temp += a_shared[pi, n] * b_shared[n, pj]
 
@@ -684,7 +684,9 @@ def _tensor_matrix_multiply(
         cuda.syncthreads()
 
     # Write the final result for the assigned element in the output matrix to global memory.
-    if i < out_shape[-2] and j < out_shape[-1]: # Checking that the indices are within the bounds of the output.
+    if (
+        i < out_shape[-2] and j < out_shape[-1]
+    ):  # Checking that the indices are within the bounds of the output.
         # location for correct position (batch, row, col) offset
         out[batch * out_strides[0] + i * out_strides[-2] + j * out_strides[-1]] = temp
 
